@@ -1,0 +1,794 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// --- DATA SOAL (50 Soal: 45 PG, 5 Isian/Pencocokan Gambar) ---
+const QUESTIONS = [
+  // Topik 1: Jaringan Komputer & Internet (No 1 - 15)
+  { id: 1, type: 'mcq', text: 'Apa fungsi utama dari router dalam jaringan komputer?', options: ['Menyimpan data sementara', 'Menghubungkan dua atau lebih jaringan yang berbeda', 'Menampilkan antarmuka grafis', 'Mendinginkan prosesor'], answer: 1, explanation: 'Router berfungsi merutekan paket data antar jaringan yang berbeda (misalnya dari jaringan lokal ke internet).' },
+  { id: 2, type: 'mcq', text: 'Jaringan yang mencakup area geografis yang sangat luas, seperti antar negara atau benua disebut...', options: ['LAN', 'MAN', 'WAN', 'PAN'], answer: 2, explanation: 'WAN (Wide Area Network) adalah jaringan komputer yang membentang di atas area geografis yang luas.' },
+  { id: 3, type: 'mcq', text: 'Protokol yang digunakan untuk mentransfer halaman web di internet adalah...', options: ['FTP', 'SMTP', 'HTTP/HTTPS', 'TCP/IP'], answer: 2, explanation: 'HTTP (Hypertext Transfer Protocol) dan HTTPS adalah protokol untuk komunikasi data di World Wide Web.' },
+  { id: 4, type: 'mcq', text: 'Perangkat lunak yang digunakan untuk menjelajahi internet disebut...', options: ['Search Engine', 'Browser', 'Sistem Operasi', 'Antivirus'], answer: 1, explanation: 'Browser (seperti Chrome, Firefox) adalah aplikasi untuk mengakses dan menampilkan halaman web.' },
+  { id: 5, type: 'mcq', text: 'Kumpulan komputer yang saling terhubung untuk berbagi sumber daya disebut...', options: ['Topologi', 'Jaringan Komputer', 'Sistem Komputer', 'Internet'], answer: 1, explanation: 'Jaringan komputer memungkinkan komputer saling berkomunikasi dan berbagi sumber daya.' },
+  { id: 6, type: 'mcq', text: 'Kecepatan transfer data dalam jaringan internet sering diukur dengan satuan...', options: ['Kilogram (Kg)', 'Hertz (Hz)', 'Megabit per second (Mbps)', 'Pixel'], answer: 2, explanation: 'Bandwidth atau kecepatan transfer data diukur dalam bps (bits per second), Mbps, atau Gbps.' },
+  { id: 7, type: 'mcq', text: 'Tindakan menyamarkan pesan atau data sehingga tidak dapat dibaca oleh pihak yang tidak berwenang disebut...', options: ['Dekripsi', 'Enkripsi', 'Phishing', 'Hacking'], answer: 1, explanation: 'Enkripsi adalah proses mengubah teks asli menjadi teks acak (ciphertext) untuk keamanan.' },
+  { id: 8, type: 'mcq', text: 'Berikut ini adalah contoh mesin pencari (Search Engine), KECUALI...', options: ['Google', 'Bing', 'Yahoo', 'Microsoft Word'], answer: 3, explanation: 'Microsoft Word adalah aplikasi pengolah kata, bukan mesin pencari.' },
+  { id: 9, type: 'mcq', text: 'Apa yang dimaksud dengan ISP?', options: ['Internet Service Provider', 'Internet System Protocol', 'Internal Security Program', 'International Standard Protocol'], answer: 0, explanation: 'ISP adalah perusahaan yang menyediakan layanan akses internet (contoh: Indihome, Telkomsel).' },
+  { id: 10, type: 'mcq', text: 'Alamat unik yang mengidentifikasi sebuah perangkat di internet disebut...', options: ['MAC Address', 'IP Address', 'URL Address', 'Email Address'], answer: 1, explanation: 'IP Address (Internet Protocol Address) adalah label numerik yang ditetapkan untuk setiap perangkat di jaringan komputer.' },
+  { id: 11, type: 'mcq', text: 'Jaringan komputer yang jangkauannya hanya mencakup area kecil seperti sebuah gedung sekolah atau kantor adalah...', options: ['WAN', 'MAN', 'LAN', 'Internet'], answer: 2, explanation: 'LAN (Local Area Network) mencakup area geografis yang kecil.' },
+  { id: 12, type: 'mcq', text: 'Bentuk topologi jaringan di mana semua komputer terhubung ke satu perangkat pusat (seperti switch/hub) disebut topologi...', options: ['Bus', 'Ring', 'Star', 'Mesh'], answer: 2, explanation: 'Topologi Star menggunakan perangkat pusat (hub/switch) untuk menghubungkan semua node.' },
+  { id: 13, type: 'mcq', text: 'Perangkat yang berfungsi mengubah sinyal digital menjadi sinyal analog dan sebaliknya untuk transmisi data melalui kabel telepon adalah...', options: ['Router', 'Modem', 'Switch', 'Repeater'], answer: 1, explanation: 'Modem (Modulator Demodulator) mengubah sinyal agar data bisa dikirim lewat media transmisi konvensional.' },
+  { id: 14, type: 'mcq', text: 'Kabel jaringan yang terbuat dari serat kaca atau plastik yang sangat halus dan mentransfer data menggunakan cahaya adalah...', options: ['Kabel Coaxial', 'Kabel UTP', 'Kabel Fiber Optik', 'Kabel STP'], answer: 2, explanation: 'Fiber Optik menggunakan cahaya untuk mentransmisikan data dengan kecepatan sangat tinggi.' },
+  { id: 15, type: 'mcq', text: 'Teknologi jaringan nirkabel yang umum digunakan untuk menghubungkan perangkat ke internet di area lokal disebut...', options: ['Bluetooth', 'NFC', 'Wi-Fi', 'Ethernet'], answer: 2, explanation: 'Wi-Fi (Wireless Fidelity) adalah standar jaringan nirkabel lokal (WLAN).' },
+
+  // Topik 2: Analisis Data (No 16 - 30)
+  { id: 16, type: 'mcq', text: 'Kumpulan fakta atau angka yang belum diolah dan belum memiliki makna secara utuh disebut...', options: ['Informasi', 'Data', 'Sistem', 'File'], answer: 1, explanation: 'Data adalah fakta mentah, informasi adalah data yang sudah diolah dan bermakna.' },
+  { id: 17, type: 'mcq', text: 'Aplikasi yang paling sering digunakan untuk mengolah data berupa angka dalam bentuk baris dan kolom adalah...', options: ['Microsoft Word', 'Microsoft PowerPoint', 'Microsoft Excel', 'Microsoft Access'], answer: 2, explanation: 'Microsoft Excel (Spreadsheet) dirancang khusus untuk mengolah angka dan tabel.' },
+  { id: 18, type: 'mcq', text: 'Fungsi pada aplikasi pengolah angka (Excel) yang digunakan untuk menjumlahkan sekelompok nilai sel adalah...', options: ['AVERAGE', 'MIN', 'MAX', 'SUM'], answer: 3, explanation: 'SUM digunakan untuk menghitung total jumlahan angka.' },
+  { id: 19, type: 'mcq', text: 'Jika Anda ingin mencari nilai rata-rata dari sekumpulan data di Excel, Anda menggunakan fungsi...', options: ['SUM', 'AVERAGE', 'COUNT', 'MEDIAN'], answer: 1, explanation: 'AVERAGE berfungsi menghitung nilai rata-rata.' },
+  { id: 20, type: 'mcq', text: 'Pertemuan antara baris (row) dan kolom (column) pada lembar kerja spreadsheet tempat kita memasukkan nilai disebut...', options: ['Range', 'Sheet', 'Cell (Sel)', 'Formula'], answer: 2, explanation: 'Cell (sel) adalah kotak individu tempat memasukkan data, ditandai dengan huruf kolom dan angka baris (misal A1).' },
+  { id: 21, type: 'mcq', text: 'Proses mengatur urutan data, misalnya dari abjad A ke Z atau dari angka terkecil ke terbesar disebut...', options: ['Filtering', 'Sorting', 'Deleting', 'Formatting'], answer: 1, explanation: 'Sorting adalah pengurutan data untuk memudahkan analisis.' },
+  { id: 22, type: 'mcq', text: 'Proses menampilkan hanya data yang memenuhi kriteria tertentu dan menyembunyikan data lainnya disebut...', options: ['Sorting', 'Filtering', 'Charting', 'Printing'], answer: 1, explanation: 'Filtering (penyaringan) digunakan untuk melihat data yang spesifik saja.' },
+  { id: 23, type: 'mcq', text: 'Jenis grafik yang paling cocok digunakan untuk menunjukkan persentase atau bagian dari keseluruhan adalah...', options: ['Grafik Garis (Line Chart)', 'Grafik Batang (Bar Chart)', 'Grafik Lingkaran (Pie Chart)', 'Grafik Titik (Scatter Plot)'], answer: 2, explanation: 'Pie chart ideal untuk menunjukkan proporsi atau persentase komposisi data.' },
+  { id: 24, type: 'mcq', text: 'Simbol dolar ($) yang ditambahkan pada alamat sel Excel (contoh: $A$1) berfungsi untuk...', options: ['Mengubah data menjadi mata uang', 'Membuat sel berwarna', 'Mengunci alamat sel agar tidak berubah saat disalin (Sel Absolut)', 'Menghapus isi sel'], answer: 2, explanation: 'Sel absolut dengan tanda $ menjaga referensi agar posisinya tetap saat formula disalin (di-drag).' },
+  { id: 25, type: 'mcq', text: 'Ekstensi file standar untuk dokumen Microsoft Excel versi modern adalah...', options: ['.docx', '.xlsx', '.pptx', '.txt'], answer: 1, explanation: '.xlsx adalah format file workbook Microsoft Excel standar.' },
+  { id: 26, type: 'mcq', text: 'Untuk memulai sebuah rumus atau fungsi matematis di dalam sel spreadsheet, kita WAJIB mengawalinya dengan tanda...', options: ['+', '-', '=', '*'], answer: 2, explanation: 'Semua rumus/formula di Excel harus diawali dengan tanda sama dengan (=).' },
+  { id: 27, type: 'mcq', text: 'Fungsi logika pada Excel yang digunakan untuk menghasilkan suatu nilai jika kondisi terpenuhi, dan nilai lain jika tidak terpenuhi adalah...', options: ['VLOOKUP', 'IF', 'AND', 'OR'], answer: 1, explanation: 'Fungsi IF adalah fungsi logika percabangan untuk mengecek suatu kondisi.' },
+  { id: 28, type: 'mcq', text: 'Tujuan utama dari pembuatan visualisasi data (seperti grafik/chart) adalah...', options: ['Membuat ukuran file lebih besar', 'Menyembunyikan informasi penting', 'Membuat data lebih mudah dipahami secara visual', 'Menghapus data yang salah'], answer: 2, explanation: 'Visualisasi membantu kita melihat pola data dengan lebih cepat dan intuitif.' },
+  { id: 29, type: 'mcq', text: 'Kumpulan dari beberapa sel yang dipilih sekaligus (misal blok dari A1 sampai C5) disebut...', options: ['Cell', 'Row', 'Range', 'Column'], answer: 2, explanation: 'Range adalah kumpulan rentang sel yang dipilih/diblok secara bersamaan.' },
+  { id: 30, type: 'mcq', text: 'Fungsi MAX dalam aplikasi pengolah angka (spreadsheet) digunakan untuk...', options: ['Mencari nilai tertinggi', 'Mencari nilai terendah', 'Mencari jumlah karakter', 'Membulatkan angka'], answer: 0, explanation: 'Fungsi MAX berguna untuk mengembalikan nilai terbesar dari sekelompok data angka.' },
+
+  // Topik 3: Algoritma & Pemrograman (No 31 - 45)
+  { id: 31, type: 'mcq', text: 'Urutan langkah-langkah yang logis dan sistematis untuk menyelesaikan suatu masalah disebut...', options: ['Program', 'Algoritma', 'Struktur Data', 'Bahasa Pemrograman'], answer: 1, explanation: 'Algoritma adalah panduan terstruktur langkah demi langkah yang tidak ambigu.' },
+  { id: 32, type: 'mcq', text: 'Representasi visual dari sebuah algoritma menggunakan simbol-simbol grafis (bangun datar) khusus disebut...', options: ['Pseudocode', 'Flowchart', 'Source Code', 'Bahasa Mesin'], answer: 1, explanation: 'Flowchart (diagram alir) menggunakan bentuk geometris untuk menggambarkan alur logika program.' },
+  { id: 33, type: 'mcq', text: 'Dalam flowchart, simbol berbentuk oval (Terminator) digunakan untuk...', options: ['Proses perhitungan', 'Input/Output data', 'Pengambilan keputusan (Decision)', 'Titik mulai (Start) dan selesai (End)'], answer: 3, explanation: 'Simbol oval/kapsul melambangkan titik awal atau titik akhir berjalannya alur.' },
+  { id: 34, type: 'mcq', text: 'Simbol belah ketupat (diamond) pada flowchart berfungsi sebagai...', options: ['Mulai program', 'Input data', 'Pengambilan Keputusan (Cabang Ya/Tidak)', 'Output data'], answer: 2, explanation: 'Belah ketupat adalah titik di mana program memilih jalur berdasarkan kondisi.' },
+  { id: 35, type: 'mcq', text: 'Tempat/wadah untuk menyimpan data atau nilai yang dapat berubah-ubah selama program dijalankan disebut...', options: ['Fungsi', 'Tipe Data', 'Variabel', 'Konstanta'], answer: 2, explanation: 'Variabel adalah wadah penyimpanan data (contoh: x = 10).' },
+  { id: 36, type: 'mcq', text: 'Pada Scratch, karakter, objek, atau gambar yang kita program untuk melakukan aksi di panggung (Stage) disebut...', options: ['Stage', 'Sprite', 'Script', 'Backdrop'], answer: 1, explanation: 'Sprite adalah aktor atau objek utama di Scratch.' },
+  { id: 37, type: 'mcq', text: 'Blok perintah "Forever" di dalam Scratch merupakan penerapan dari konsep dasar pemrograman yaitu...', options: ['Percabangan (If/Else)', 'Variabel', 'Perulangan (Looping)', 'Operator Logika'], answer: 2, explanation: '"Forever" digunakan untuk mengulang sekumpulan blok instruksi tanpa henti.' },
+  { id: 38, type: 'mcq', text: 'Tipe data yang hanya bernilai True (Benar) atau False (Salah) disebut...', options: ['Integer', 'Float', 'String', 'Boolean'], answer: 3, explanation: 'Boolean adalah tipe data logika yang hanya punya 2 kondisi.' },
+  { id: 39, type: 'mcq', text: 'Penggunaan instruksi "If-Then-Else" dalam penulisan algoritma disebut sebagai struktur...', options: ['Percabangan', 'Perulangan', 'Sekuensial', 'Deklarasi'], answer: 0, explanation: 'Percabangan menjalankan blok kode tertentu berdasarkan kondisi/persyaratan yang diberikan.' },
+  { id: 40, type: 'mcq', text: 'Kesalahan/cacat pada penulisan kode atau logika program yang menyebabkan program error atau tidak berjalan sesuai harapan disebut...', options: ['Virus', 'Bug', 'Spam', 'Malware'], answer: 1, explanation: 'Bug adalah masalah atau kecacatan di dalam kode pemrograman perangkat lunak.' },
+  { id: 41, type: 'mcq', text: 'Dalam bahasa pemrograman Python, perintah untuk menampilkan/mencetak teks atau nilai ke layar adalah...', options: ['echo', 'show()', 'print()', 'display'], answer: 2, explanation: 'Fungsi print() digunakan untuk mencetak output ke konsol.' },
+  { id: 42, type: 'mcq', text: 'Operator logika yang akan bernilai Benar (True) HANYA JIKA KEDUA kondisi yang dibandingkan bernilai Benar adalah...', options: ['OR', 'AND', 'NOT', 'XOR'], answer: 1, explanation: 'Operator AND mengharuskan kedua sisi bernilai True (misal: True AND True = True).' },
+  { id: 43, type: 'mcq', text: 'Sebuah bahasa pemrograman yang menggunakan susunan blok bergambar (visual) seperti menyusun balok lego sangat cocok dipelajari oleh pemula. Contoh bahasa ini adalah...', options: ['Python', 'C++', 'Java', 'Scratch'], answer: 3, explanation: 'Scratch adalah pemrograman visual block-based.' },
+  { id: 44, type: 'mcq', text: 'Urutan baris perintah yang dibaca dan dieksekusi oleh komputer lurus dari atas ke bawah secara berurutan dinamakan struktur algoritma...', options: ['Percabangan', 'Perulangan', 'Sekuensial (Berurutan)', 'Bersarang (Nested)'], answer: 2, explanation: 'Sekuensial berarti instruksi dijalankan berurutan langkah demi langkah.' },
+  { id: 45, type: 'mcq', text: 'Apa hasil dari ekspresi logika dasar: True OR False?', options: ['True', 'False', 'Error', 'Null'], answer: 0, explanation: 'Operator OR akan menghasilkan True jika minimal terdapat satu nilai kondisi True.' },
+
+  // Topik 4: Dampak Sosial Informatika (Pencocokan Gambar No 46 - 50)
+  { id: 46, type: 'matching', text: 'Cocokkan gambar peringatan di bawah ini dengan istilah Dampak Sosial Informatika yang tepat.\n\n(Ilustrasi: Pelecehan atau intimidasi kepada seseorang secara berulang di dunia maya)', image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="50,10 90,90 10,90" fill="%23FBBF24" stroke="%23B45309" stroke-width="5"/><text x="50" y="75" font-size="50" font-family="sans-serif" font-weight="bold" text-anchor="middle" fill="%23B45309">!</text></svg>', options: ['Cyberbullying', 'Hoax / Berita Palsu', 'Phishing', 'Hak Cipta (Copyright)', 'Jejak Digital'], answer: 0, explanation: 'Tindakan pelecehan atau perundungan di dunia maya disebut Cyberbullying.' },
+  { id: 47, type: 'matching', text: 'Cocokkan gambar di bawah ini dengan istilah Dampak Sosial Informatika yang tepat.\n\n(Ilustrasi: Stempel cap berita palsu)', image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><rect x="10" y="10" rx="10" ry="10" width="180" height="80" fill="none" stroke="%23EF4444" stroke-width="8"/><text x="100" y="65" font-size="35" font-family="sans-serif" font-weight="900" text-anchor="middle" fill="%23EF4444" transform="rotate(-5 100 50)">HOAX / FAKE</text></svg>', options: ['Cyberbullying', 'Hoax / Berita Palsu', 'Phishing', 'Hak Cipta (Copyright)', 'Jejak Digital'], answer: 1, explanation: 'Berita bohong yang disebarkan seolah-olah nyata adalah Hoax.' },
+  { id: 48, type: 'matching', text: 'Cocokkan ikon di bawah ini dengan istilah Dampak Sosial Informatika yang tepat.\n\n(Ilustrasi: Kail pancing yang digunakan untuk mencuri data pribadi dan password)', image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 10 V 70 A 20 20 0 0 1 10 70 V 60" fill="none" stroke="%236B7280" stroke-width="8" stroke-linecap="round"/><path d="M10 60 L 0 75 L 20 75 Z" fill="%236B7280"/><circle cx="50" cy="15" r="8" fill="%23EF4444"/></svg>', options: ['Cyberbullying', 'Hoax / Berita Palsu', 'Phishing', 'Hak Cipta (Copyright)', 'Jejak Digital'], answer: 2, explanation: 'Penipuan online menggunakan jebakan (seperti link palsu) untuk mencuri data pribadi disebut Phishing.' },
+  { id: 49, type: 'matching', text: 'Cocokkan gambar lambang di bawah ini dengan istilah yang tepat.\n\n(Ilustrasi: Huruf C di dalam sebuah lingkaran yang menunjukan kepemilikan/karya asli)', image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="%233B82F6" stroke-width="8"/><text x="50" y="70" font-size="55" font-family="sans-serif" font-weight="bold" text-anchor="middle" fill="%233B82F6">C</text></svg>', options: ['Cyberbullying', 'Hoax / Berita Palsu', 'Phishing', 'Hak Cipta (Copyright)', 'Jejak Digital'], answer: 3, explanation: 'Lambang tersebut menunjukkan Hak Cipta (Copyright) untuk melindungi karya penciptanya.' },
+  { id: 50, type: 'matching', text: 'Cocokkan gambar ikon di bawah ini dengan istilah Dampak Sosial Informatika yang tepat.\n\n(Ilustrasi: Jejak langkah kaki yang dihasilkan dari rekam jejak aktivitas di internet)', image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="40" cy="60" rx="15" ry="25" fill="%2310B981" transform="rotate(-15 40 60)"/><circle cx="25" cy="25" r="6" fill="%2310B981"/><circle cx="40" cy="18" r="7" fill="%2310B981"/><circle cx="55" cy="20" r="6" fill="%2310B981"/><circle cx="68" cy="28" r="5" fill="%2310B981"/></svg>', options: ['Cyberbullying', 'Hoax / Berita Palsu', 'Phishing', 'Hak Cipta (Copyright)', 'Jejak Digital'], answer: 4, explanation: 'Rekam jejak aktivitas kita yang tertinggal saat menggunakan internet disebut Jejak Digital (Digital Footprint).' }
+];
+
+// MOCK SPREADSHEET URL - Ganti dengan URL dari Google Apps Script Deployment
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyt0HYHVIdfrD08AvopNhdn8N_eFWI98tPWDJ4vzSYg_wR_44wTplPnyE-hgSbqFmFo/exec';
+
+const App = () => {
+  const [view, setView] = useState('login'); // login, exam, result
+  const [studentName, setStudentName] = useState('');
+  const [studentClass, setStudentClass] = useState('8A');
+  const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [answers, setAnswers] = useState(Array(50).fill(null));
+  const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
+  const [warnings, setWarnings] = useState(0);
+  const [cheatLog, setCheatLog] = useState([]);
+  const [score, setScore] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatusText, setSubmitStatusText] = useState("Menyimpan dan Menghitung Nilai...");
+  
+  // Modals state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({});
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+
+  // Pastikan stream kamera terhubung ke elemen video setelah halaman ujian dirender
+  useEffect(() => {
+    if (view === 'exam' && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [view]);
+
+  // --- ANTI CHEAT & CAMERA LOGIC ---
+  useEffect(() => {
+    if (view === 'exam') {
+      const handleVisibilityChange = () => {
+        if (document.hidden) {
+          triggerWarning("Meninggalkan tab aplikasi ujian.");
+        }
+      };
+      
+      const handleBlur = () => {
+        triggerWarning("Membuka aplikasi lain atau kehilangan fokus.");
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      window.addEventListener("blur", handleBlur);
+
+      return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        window.removeEventListener("blur", handleBlur);
+      };
+    }
+  }, [view, warnings]);
+
+  // Timer logic
+  useEffect(() => {
+    let timer;
+    if (view === 'exam' && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            forceSubmitExam("Waktu Habis");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [view, timeLeft]);
+
+  // Camera initialization
+  const startCamera = async () => {
+    try {
+      // Menggunakan resolusi rendah (320x240) dan frameRate rendah agar ukuran video tidak raksasa 
+      // dan tidak gagal saat diupload ke Google Drive.
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 320, height: 240, frameRate: 15 } 
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      // --- START RECORDING LOGIC ---
+      recordedChunksRef.current = [];
+      
+      // Mengatur format rekaman video dengan bitrate rendah
+      let options = { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: 100000 };
+      let mediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(stream, options);
+      } catch (e) {
+        mediaRecorder = new MediaRecorder(stream); 
+      }
+      
+      mediaRecorderRef.current = mediaRecorder;
+
+      // Menyimpan data video setiap kali tersedia
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      // Memulai rekaman
+      mediaRecorder.start(1000); // Rekam per detik
+      // --- END RECORDING LOGIC ---
+
+      return true;
+    } catch (err) {
+      alert("Akses kamera ditolak. Ujian membutuhkan kamera aktif.");
+      return false;
+    }
+  };
+
+  // Fungsi stop camera diubah jadi Async agar bisa menunggu proses upload selesai
+  const stopCameraAndUpload = async () => {
+    return new Promise((resolve) => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        
+        mediaRecorderRef.current.onstop = async () => {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          const fileName = `Rekaman_${studentName.replace(/\s+/g, '_')}_${studentClass}_SAT.webm`;
+
+          // 1. BACKUP DOWNLOAD LOKAL (Sangat penting jika internet mati atau video > 50MB)
+          try {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style = 'display: none';
+            a.href = url;
+            a.download = `BACKUP_${fileName}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          } catch(e) { console.error("Gagal download backup", e); }
+
+          // 2. UPLOAD KE GOOGLE DRIVE
+          setSubmitStatusText("Mengonversi Video... Harap Tunggu");
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = async () => {
+            const base64data = reader.result.split(',')[1];
+            setSubmitStatusText("Mengunggah Rekaman ke Google Drive... JANGAN TUTUP APLIKASI");
+            
+            try {
+              await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action: 'uploadVideo', // Penanda untuk Google Script
+                  filename: fileName,
+                  mimeType: 'video/webm',
+                  data: base64data
+                })
+              });
+              console.log("Video upload terpicu");
+            } catch (e) {
+              console.error("Gagal upload video", e);
+            }
+            resolve();
+          };
+        };
+
+        // Hentikan rekaman untuk memicu event onstop di atas
+        mediaRecorderRef.current.stop();
+
+      } else {
+        resolve();
+      }
+
+      // Matikan lampu kamera perangkat
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    });
+  };
+
+  const triggerWarning = (reason) => {
+    if (view !== 'exam') return;
+    
+    const newWarnings = warnings + 1;
+    setWarnings(newWarnings);
+    
+    const timeStr = new Date().toLocaleTimeString('id-ID');
+    const newLog = `[${timeStr}] Pelanggaran ${newWarnings}: ${reason}`;
+    setCheatLog(prev => [...prev, newLog]);
+
+    if (newWarnings >= 3) {
+      showModal({
+        title: "KECURANGAN MAKSIMAL",
+        message: "Anda telah melanggar aturan sebanyak 3 kali (Ganti tab/keluar aplikasi). Ujian dihentikan secara otomatis.",
+        type: 'danger',
+        onConfirm: () => forceSubmitExam("Diskualifikasi - Kecurangan Maksimal")
+      });
+    } else {
+      showModal({
+        title: `PERINGATAN KECURANGAN (${newWarnings}/3)`,
+        message: `Sistem mendeteksi Anda keluar dari tab/aplikasi ujian. \n\nIni adalah peringatan ke-${newWarnings}. Jika mencapai 3 kali, ujian akan otomatis dikumpulkan!`,
+        type: 'warning',
+        onConfirm: () => setModalOpen(false)
+      });
+    }
+  };
+
+  const showModal = ({ title, message, onConfirm, onCancel, type = 'default' }) => {
+    setModalConfig({ title, message, onConfirm, onCancel, type });
+    setModalOpen(true);
+  };
+
+  const handleStartExam = async () => {
+    if (!studentName.trim()) {
+      showModal({ title: "Validasi", message: "Mohon isi nama Anda.", onConfirm: () => setModalOpen(false) });
+      return;
+    }
+
+    const cameraReady = await startCamera();
+    if (cameraReady) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen diabaikan"));
+      }
+      setView('exam');
+    }
+  };
+
+  const handleAnswer = (val) => {
+    const newAnswers = [...answers];
+    newAnswers[currentQIndex] = val;
+    setAnswers(newAnswers);
+  };
+
+  const calculateScore = () => {
+    let totalScore = 0;
+    let correct = 0;
+    let wrong = 0;
+
+    QUESTIONS.forEach((q, idx) => {
+      let isCorrect = false;
+      const userAns = answers[idx];
+
+      if (q.type === 'mcq' || q.type === 'matching') {
+        if (userAns === q.answer) isCorrect = true;
+      } else if (q.type === 'essay') {
+        if (userAns) {
+          const uText = userAns.toString().toLowerCase().trim();
+          const validAnswers = q.answer.split(',');
+          if (validAnswers.some(ans => uText.includes(ans))) {
+            isCorrect = true;
+          }
+        }
+      }
+
+      if (isCorrect) {
+        totalScore += 2; // 2 points per correct answer (50 * 2 = 100)
+        correct++;
+      } else {
+        wrong++;
+      }
+    });
+
+    return { totalScore, correct, wrong };
+  };
+
+  const sendToSpreadsheet = async (finalScore, correct, wrong, submitReason) => {
+    setSubmitStatusText("Menyimpan Nilai ke Server...");
+    
+    // Format waktu ke WIB (Waktu Indonesia Barat) agar sangat jelas dibaca di Spreadsheet
+    const formattedTime = new Date().toLocaleString('id-ID', { 
+      timeZone: 'Asia/Jakarta', 
+      dateStyle: 'full', 
+      timeStyle: 'long' 
+    });
+
+    const payload = {
+      action: 'saveData', // Penanda untuk Google Script
+      timestamp: formattedTime,
+      nama: studentName,
+      kelas: studentClass,
+      nilai: finalScore,
+      benar: correct,
+      salah: wrong,
+      keterangan: submitReason,
+      log_kecurangan: cheatLog.join(" | ") || "Aman",
+      jumlah_kecurangan: warnings
+    };
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.error("Gagal mengirim data nilai", e);
+    }
+  };
+
+  const processSubmission = async (reason = "Normal") => {
+    setIsSubmitting(true);
+    setModalOpen(false);
+
+    if (document.exitFullscreen && document.fullscreenElement) {
+      document.exitFullscreen().catch(e => console.log(e));
+    }
+
+    // Tunggu proses rekaman video berhenti dan selesai di-upload ke Drive
+    await stopCameraAndUpload();
+
+    // Lanjut mengirim nilai ke Spreadsheet
+    const { totalScore, correct, wrong } = calculateScore();
+    setScore(totalScore);
+    await sendToSpreadsheet(totalScore, correct, wrong, reason);
+    
+    setView('result');
+    setIsSubmitting(false);
+  };
+
+  const forceSubmitExam = (reason) => {
+    processSubmission(reason);
+  };
+
+  const attemptSubmit = () => {
+    const unansweredCount = answers.filter(a => a === null || a === '').length;
+    if (unansweredCount > 0) {
+      showModal({
+        title: "Soal Belum Lengkap!",
+        message: `Terdapat ${unansweredCount} soal yang belum dijawab. Apakah Anda yakin ingin mengumpulkan ujian sekarang?`,
+        type: 'warning',
+        onConfirm: () => processSubmission("Selesai (Ada Kosong)"),
+        onCancel: () => setModalOpen(false)
+      });
+    } else {
+      showModal({
+        title: "Konfirmasi Kumpul",
+        message: "Apakah Anda yakin sudah selesai dan ingin mengumpulkan ujian?",
+        type: 'default',
+        onConfirm: () => processSubmission("Selesai Normal"),
+        onCancel: () => setModalOpen(false)
+      });
+    }
+  };
+
+  // UI Components
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const currentQuestion = QUESTIONS[currentQIndex];
+
+  // --- RENDER LOGIN ---
+  if (view === 'login') {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-blue-700">UJIAN SAT GENAP</h1>
+            <h2 className="text-lg font-semibold text-gray-700">SMPN 38 BANDAR LAMPUNG</h2>
+            <p className="text-gray-500 mt-2">Mata Pelajaran: Informatika Kelas 8</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+              <input 
+                type="text" 
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Masukkan nama Anda..."
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Kelas</label>
+              <select 
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:border-blue-500 focus:ring-blue-500"
+                value={studentClass}
+                onChange={(e) => setStudentClass(e.target.value)}
+              >
+                <option value="8A">8 A</option>
+                <option value="8B">8 B</option>
+              </select>
+            </div>
+            
+            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 mt-6">
+              <h3 className="font-bold text-yellow-800 text-sm mb-2">⚠ PERATURAN UJIAN</h3>
+              <ul className="text-xs text-yellow-700 list-disc pl-4 space-y-1">
+                <li>Ujian diawasi menggunakan <b>Kamera</b> (Webcam/Kamera Depan).</li>
+                <li>Dilarang keluar aplikasi atau mengganti tab browser.</li>
+                <li>Sistem mencatat pelanggaran. <b>Maksimal 3 kali peringatan</b>, lebih dari itu ujian akan disubmit otomatis.</li>
+                <li>Waktu ujian: <b>90 Menit</b>.</li>
+              </ul>
+            </div>
+
+            <button 
+              onClick={handleStartExam}
+              className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition mt-6"
+            >
+              Mulai Ujian Sekarang
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Component */}
+        {modalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+              <h3 className={`text-lg font-bold mb-2 ${modalConfig.type === 'danger' ? 'text-red-600' : 'text-gray-900'}`}>{modalConfig.title}</h3>
+              <p className="text-gray-600 text-sm whitespace-pre-wrap">{modalConfig.message}</p>
+              <div className="mt-6 flex justify-end gap-2">
+                {modalConfig.onCancel && (
+                  <button onClick={modalConfig.onCancel} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Batal</button>
+                )}
+                <button onClick={modalConfig.onConfirm} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Mengerti / Lanjut</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // --- RENDER EXAM ---
+  if (view === 'exam') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col no-select">
+        {/* Header */}
+        <header className="bg-white shadow px-4 py-3 flex justify-between items-center sticky top-0 z-10">
+          <div>
+            <h1 className="font-bold text-gray-800 truncate max-w-[150px] md:max-w-full">{studentName} - {studentClass}</h1>
+            <p className="text-xs text-red-600 font-semibold">Peringatan Kecurangan: {warnings}/3</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`px-4 py-1 rounded-full font-mono font-bold ${timeLeft < 300 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-blue-100 text-blue-800'}`}>
+              ⏳ {formatTime(timeLeft)}
+            </div>
+          </div>
+        </header>
+
+        {/* Camera PiP Widget */}
+        <div className="fixed bottom-4 right-4 z-40 bg-black p-1 rounded-lg shadow-lg border-2 border-gray-300 w-24 h-32 md:w-32 md:h-40 overflow-hidden pointer-events-none">
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline 
+            muted 
+            className="w-full h-full object-cover rounded"
+          />
+          <div className="absolute bottom-1 right-1 flex items-center gap-1">
+            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            <span className="text-[10px] text-white font-bold drop-shadow-md">REC</span>
+          </div>
+        </div>
+
+        <main className="flex-1 flex flex-col md:flex-row max-w-6xl w-full mx-auto p-2 md:p-4 gap-4">
+          
+          {/* Main Question Area */}
+          <div className="flex-1 bg-white rounded-xl shadow p-4 md:p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h2 className="text-lg font-bold text-gray-700">Soal No. {currentQIndex + 1}</h2>
+              <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                {currentQuestion.type === 'mcq' ? 'Pilihan Ganda' : currentQuestion.type === 'matching' ? 'Pencocokan Gambar' : 'Isian Singkat'}
+              </span>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto pb-8">
+              <p className="text-gray-800 text-base md:text-lg mb-4 whitespace-pre-wrap leading-relaxed">
+                {currentQuestion.text}
+              </p>
+              
+              {currentQuestion.image && (
+                <div className="mb-6 flex justify-center bg-blue-50 p-6 rounded-xl border-2 border-dashed border-blue-200">
+                  <img 
+                    src={currentQuestion.image} 
+                    alt="Ilustrasi Soal" 
+                    className="max-w-full w-auto h-48 md:h-72 object-contain drop-shadow-md" 
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/400x300/e2e8f0/475569?text=Gambar+Tidak+Tersedia'; }}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {currentQuestion.type === 'mcq' ? (
+                  currentQuestion.options.map((opt, idx) => (
+                    <label 
+                      key={idx} 
+                      className={`flex items-start p-3 border rounded-lg cursor-pointer transition-colors ${answers[currentQIndex] === idx ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-50'}`}
+                    >
+                      <input 
+                        type="radio" 
+                        name={`q-${currentQuestion.id}`} 
+                        className="mt-1 w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        checked={answers[currentQIndex] === idx}
+                        onChange={() => handleAnswer(idx)}
+                      />
+                      <span className="ml-3 text-gray-700 font-medium select-none">{opt}</span>
+                    </label>
+                  ))
+                ) : currentQuestion.type === 'matching' ? (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <p className="text-gray-700 font-medium mb-3">Pilih pasangan yang paling tepat untuk gambar di atas:</p>
+                    <select
+                      className="w-full border border-gray-300 p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      value={answers[currentQIndex] !== null ? answers[currentQIndex] : ''}
+                      onChange={(e) => handleAnswer(e.target.value !== '' ? parseInt(e.target.value) : null)}
+                    >
+                      <option value="" disabled>-- Pilih Istilah --</option>
+                      {currentQuestion.options.map((opt, idx) => (
+                        <option key={idx} value={idx}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <input 
+                      type="text" 
+                      className="w-full border border-gray-300 p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500 uppercase"
+                      placeholder="Ketik jawaban di sini..."
+                      value={answers[currentQIndex] || ''}
+                      onChange={(e) => handleAnswer(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">*Tulis nama komponen komputer yang sesuai dengan gambar.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Nav Buttons */}
+            <div className="flex justify-between items-center mt-4 pt-4 border-t">
+              <button 
+                onClick={() => setCurrentQIndex(prev => Math.max(0, prev - 1))}
+                disabled={currentQIndex === 0}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 font-medium"
+              >
+                ← Sebelumnya
+              </button>
+              
+              {currentQIndex === QUESTIONS.length - 1 ? (
+                <button 
+                  onClick={attemptSubmit}
+                  className="px-6 py-2 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 animate-pulse"
+                >
+                  Selesai Ujian
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setCurrentQIndex(prev => Math.min(QUESTIONS.length - 1, prev + 1))}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow"
+                >
+                  Selanjutnya →
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar Daftar Soal */}
+          <div className="w-full md:w-64 bg-white rounded-xl shadow p-4 flex flex-col h-64 md:h-auto">
+            <h3 className="font-bold text-gray-700 mb-3 text-center border-b pb-2">Daftar Soal</h3>
+            <div className="grid grid-cols-5 gap-2 overflow-y-auto p-1 flex-1">
+              {QUESTIONS.map((q, idx) => {
+                const isAnswered = answers[idx] !== null && answers[idx] !== '';
+                const isCurrent = currentQIndex === idx;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentQIndex(idx)}
+                    className={`w-full aspect-square rounded flex items-center justify-center text-sm font-bold border 
+                      ${isCurrent ? 'ring-2 ring-black ring-offset-1' : ''} 
+                      ${isAnswered ? 'bg-green-500 text-white border-green-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}
+                    `}
+                  >
+                    {idx + 1}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="mt-4 pt-3 border-t text-xs flex justify-around">
+              <div className="flex items-center gap-1"><span className="w-3 h-3 bg-green-500 rounded-sm inline-block"></span> Terjawab</div>
+              <div className="flex items-center gap-1"><span className="w-3 h-3 bg-gray-100 border rounded-sm inline-block"></span> Kosong</div>
+            </div>
+          </div>
+
+        </main>
+
+        {/* Modal Warnings & Confirms */}
+        {modalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl transform scale-100 transition-all">
+              <h3 className={`text-xl font-bold mb-3 ${modalConfig.type === 'danger' ? 'text-red-600' : modalConfig.type === 'warning' ? 'text-orange-500' : 'text-blue-700'}`}>
+                {modalConfig.title}
+              </h3>
+              <p className="text-gray-700 mb-6">{modalConfig.message}</p>
+              <div className="flex justify-end gap-3">
+                {modalConfig.onCancel && (
+                  <button onClick={modalConfig.onCancel} className="px-4 py-2 bg-gray-200 font-medium rounded hover:bg-gray-300 text-gray-800">
+                    Batal
+                  </button>
+                )}
+                <button onClick={modalConfig.onConfirm} className={`px-4 py-2 font-bold text-white rounded shadow ${modalConfig.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                  {modalConfig.type === 'danger' ? 'Akhiri Ujian' : 'Konfirmasi'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Loading Overlay when submitting */}
+        {isSubmitting && (
+           <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-50 p-6 text-center">
+             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-6"></div>
+             <p className="text-white font-bold text-xl mb-2">{submitStatusText}</p>
+             <p className="text-gray-400 text-sm">Proses ini mungkin memakan waktu beberapa menit. Jangan matikan internet atau menutup aplikasi.</p>
+           </div>
+        )}
+
+      </div>
+    );
+  }
+
+  // --- RENDER RESULT ---
+  if (view === 'result') {
+    const { totalScore, correct, wrong } = calculateScore();
+    
+    return (
+      <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          
+          {/* Result Card */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 text-center border-t-8 border-blue-600">
+            <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Ujian Selesai!</h1>
+            <p className="text-gray-600">Terima kasih, <b>{studentName} ({studentClass})</b>.</p>
+            <p className="text-green-600 text-sm mt-2">✓ Nilai dan Bukti Rekaman Anda telah dikirim ke Server Sekolah.</p>
+            
+            <div className="my-8 flex flex-wrap justify-center gap-6">
+              <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 w-40">
+                <p className="text-sm text-blue-600 font-bold mb-1">NILAI AKHIR</p>
+                <p className="text-5xl font-black text-blue-800">{totalScore}</p>
+              </div>
+              <div className="bg-green-50 p-6 rounded-xl border border-green-100 w-40">
+                <p className="text-sm text-green-600 font-bold mb-1">BENAR</p>
+                <p className="text-4xl font-bold text-green-700">{correct}</p>
+              </div>
+              <div className="bg-red-50 p-6 rounded-xl border border-red-100 w-40">
+                <p className="text-sm text-red-600 font-bold mb-1">SALAH / KOSONG</p>
+                <p className="text-4xl font-bold text-red-700">{wrong}</p>
+              </div>
+            </div>
+
+            {warnings > 0 && (
+              <div className="bg-red-100 border border-red-300 p-4 rounded-lg text-left mt-4">
+                <h3 className="font-bold text-red-800 flex items-center gap-2">
+                  <span>⚠</span> Catatan Kecurangan (Terekam {warnings} kali)
+                </h3>
+                <ul className="text-sm text-red-700 mt-2 list-disc pl-5">
+                  {cheatLog.map((log, i) => <li key={i}>{log}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Answer Review Section */}
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Review Jawaban</h2>
+            <div className="space-y-6">
+              {QUESTIONS.map((q, idx) => {
+                const userAns = answers[idx];
+                let isCorrect = false;
+                let displayUserAns = "Tidak dijawab";
+                let displayCorrectAns = "";
+
+                if (q.type === 'mcq' || q.type === 'matching') {
+                  isCorrect = userAns === q.answer;
+                  if (userAns !== null && userAns !== undefined && q.options[userAns]) {
+                    displayUserAns = q.options[userAns];
+                  }
+                  displayCorrectAns = q.options[q.answer];
+                } else {
+                  if (userAns) {
+                    const uText = userAns.toString().toLowerCase().trim();
+                    const validAnswers = q.answer.split(',');
+                    if (validAnswers.some(ans => uText.includes(ans))) {
+                      isCorrect = true;
+                    }
+                    displayUserAns = userAns;
+                  }
+                  displayCorrectAns = q.answer.split(',')[0].toUpperCase(); // Show primary answer
+                }
+
+                return (
+                  <div key={idx} className={`p-4 rounded-lg border-l-4 ${isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}`}>
+                    <p className="font-semibold text-gray-800 mb-2">{idx + 1}. {q.text}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mt-3">
+                      <div className="bg-white p-2 rounded border">
+                        <span className="text-gray-500 block text-xs">Jawaban Anda:</span>
+                        <span className={`font-bold ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>{displayUserAns}</span>
+                        {isCorrect ? <span className="ml-2 text-green-600">✅</span> : <span className="ml-2 text-red-600">❌</span>}
+                      </div>
+                      <div className="bg-white p-2 rounded border">
+                        <span className="text-gray-500 block text-xs">Jawaban Benar:</span>
+                        <span className="font-bold text-gray-800">{displayCorrectAns}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 text-sm bg-white p-3 rounded text-gray-700 shadow-sm border border-gray-100">
+                      <span className="font-bold block mb-1">Pembahasan:</span> 
+                      {q.explanation}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default App;
